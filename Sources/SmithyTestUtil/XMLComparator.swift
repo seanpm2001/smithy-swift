@@ -60,7 +60,6 @@ extension XMLConverter: XMLParserDelegate {
         qualifiedName qName: String?,
         attributes attributeDict: [String : String] = [:]
     ) {
-        let parent = stack.last!
         let element = XMLElement(
             name: elementName,
             attributes: attributeDict
