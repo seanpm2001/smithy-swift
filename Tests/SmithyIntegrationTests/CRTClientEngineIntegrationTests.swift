@@ -7,10 +7,7 @@ import XCTest
 @testable import ClientRuntime
 import AwsCommonRuntimeKit
 
-// These tests are disabled because unreliability of httpbin.org is causing spurious failures.
-// Github issue to track correction of these tests: https://github.com/awslabs/aws-sdk-swift/issues/962
-
-class CRTClientEngineIntegrationTests: NetworkingTestUtils {
+class CRTClientEngineIntegrationTests: XCTestCase {
 
     var httpClient: SdkHttpClient!
     
@@ -24,11 +21,7 @@ class CRTClientEngineIntegrationTests: NetworkingTestUtils {
         httpClient = SdkHttpClient(engine: crtEngine, config: httpClientConfiguration)
     }
 
-    override func tearDown() {
-        super.tearDown()
-    }
-
-    func xtestMakeHttpGetRequest() async throws {
+    func testMakeHttpGetRequest() async throws {
         var headers = Headers()
         headers.add(name: "Content-type", value: "application/json")
         headers.add(name: "Host", value: "httpbin.org")
@@ -39,7 +32,7 @@ class CRTClientEngineIntegrationTests: NetworkingTestUtils {
         XCTAssert(response.statusCode == HttpStatusCode.ok)
     }
 
-    func xtestMakeHttpPostRequest() async throws {
+    func testMakeHttpPostRequest() async throws {
         //used https://httpbin.org
         var headers = Headers()
         headers.add(name: "Content-type", value: "application/json")
@@ -56,7 +49,7 @@ class CRTClientEngineIntegrationTests: NetworkingTestUtils {
         XCTAssert(response.statusCode == HttpStatusCode.ok)
     }
 
-    func xtestMakeHttpStreamRequestDynamicReceive() async throws {
+    func testMakeHttpStreamRequestDynamicReceive() async throws {
         //used https://httpbin.org
         var headers = Headers()
         headers.add(name: "Content-type", value: "application/json")
@@ -70,7 +63,7 @@ class CRTClientEngineIntegrationTests: NetworkingTestUtils {
         XCTAssert(response.statusCode == HttpStatusCode.ok)
     }
 
-    func xtestMakeHttpStreamRequestReceive() async throws {
+    func testMakeHttpStreamRequestReceive() async throws {
         //used https://httpbin.org
         var headers = Headers()
         headers.add(name: "Content-type", value: "application/json")
@@ -90,7 +83,7 @@ class CRTClientEngineIntegrationTests: NetworkingTestUtils {
         XCTAssert(response.statusCode == HttpStatusCode.ok)
     }
 
-    func xtestMakeHttpStreamRequestReceiveOneByte() async throws {
+    func testMakeHttpStreamRequestReceiveOneByte() async throws {
         //used https://httpbin.org
         var headers = Headers()
         headers.add(name: "Content-type", value: "application/json")
@@ -110,7 +103,7 @@ class CRTClientEngineIntegrationTests: NetworkingTestUtils {
         XCTAssert(response.statusCode == HttpStatusCode.ok)
     }
 
-    func xtestMakeHttpStreamRequestReceive3ThousandBytes() async throws {
+    func testMakeHttpStreamRequestReceive3ThousandBytes() async throws {
         //used https://httpbin.org
         var headers = Headers()
         headers.add(name: "Content-type", value: "application/json")
@@ -130,7 +123,7 @@ class CRTClientEngineIntegrationTests: NetworkingTestUtils {
         XCTAssert(response.statusCode == HttpStatusCode.ok)
     }
 
-    func xtestMakeHttpStreamRequestFromData() async throws {
+    func testMakeHttpStreamRequestFromData() async throws {
         //used https://httpbin.org
         var headers = Headers()
         headers.add(name: "Content-type", value: "application/json")
@@ -148,7 +141,7 @@ class CRTClientEngineIntegrationTests: NetworkingTestUtils {
         XCTAssert(response.statusCode == HttpStatusCode.ok)
     }
     
-    func xtestMakeHttp2StreamRequest() async throws {
+    func testMakeHttp2StreamRequest() async throws {
         // using http://nghttp2.org/httpbin/#/
         var headers = Headers()
         headers.add(name: "Content-type", value: "application/json")

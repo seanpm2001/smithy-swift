@@ -70,33 +70,4 @@ class MiddlewareStackTests: XCTestCase {
 
         XCTAssert(result.value == 200)
     }
-
-    // This test is disabled because unreliability of httpbin.org is causing spurious failures.
-    // Github issue to track correction of these tests: https://github.com/awslabs/aws-sdk-swift/issues/962
-
-    func xtestFullBlownOperationRequestWithClientHandler() async throws {
-        let httpClientConfiguration = HttpClientConfiguration()
-        let clientEngine = CRTClientEngine()
-        let httpClient = SdkHttpClient(engine: clientEngine, config: httpClientConfiguration)
-
-        let builtContext = HttpContextBuilder()
-            .withMethod(value: .get)
-            .withPath(value: "/headers")
-            .withEncoder(value: JSONEncoder())
-            .withDecoder(value: JSONDecoder())
-            .withOperation(value: "Test Operation")
-            .build()
-        var stack = OperationStack<MockInput, MockOutput, MockMiddlewareError>(id: "Test Operation")
-        stack.serializeStep.intercept(position: .after,
-                                      middleware: MockSerializeMiddleware(id: "TestMiddleware", headerName: "TestName", headerValue: "TestValue"))
-        stack.deserializeStep.intercept(position: .after,
-                                        middleware: MockDeserializeMiddleware<MockOutput, MockMiddlewareError>(id: "TestDeserializeMiddleware"))
-
-        let result = try await stack.handleMiddleware(context: builtContext, input: MockInput(), next: httpClient.getHandler())
-
-        XCTAssert(result.value == 200)
-        XCTAssert(result.headers.headers.contains(where: { (header) -> Bool in
-            header.name == "Content-Length"
-        }))
-    }
 }
