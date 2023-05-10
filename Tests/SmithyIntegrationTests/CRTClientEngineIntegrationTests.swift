@@ -7,7 +7,7 @@ import XCTest
 @testable import ClientRuntime
 import AwsCommonRuntimeKit
 
-class CRTClientEngineIntegrationTests: XCTestCase {
+final class CRTClientEngineIntegrationTests: XCTestCase {
 
     var httpClient: SdkHttpClient!
     

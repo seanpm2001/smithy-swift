@@ -1,6 +1,7 @@
 // swift-tools-version:5.5
 
 import PackageDescription
+import class Foundation.ProcessInfo
 
 var includeIntegrationTests = ProcessInfo.processInfo.environment["SMITHY_SWIFT_INCLUDE_INTEGRATION_TESTS"] != nil
 
