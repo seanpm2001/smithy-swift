@@ -5,4 +5,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-public typealias WritingClosure<T, Writer> = (T, Writer) throws -> Void
+import Foundation
+
+public class Reader {
+
+    public init() {}
+}

@@ -5,4 +5,4 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-public typealias WritingClosure<T, Writer> = (T, Writer) throws -> Void
+public typealias ReadingClosure<T, Reader> = (Reader) throws -> T
