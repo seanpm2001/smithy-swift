@@ -5,13 +5,20 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+import typealias SmithyReadWrite.DocumentReadingClosure
+import typealias SmithyReadWrite.ReadingClosure
+
 /// The interface for creating the response object that results from a HTTP/HTTPS error response.
 ///
 /// Value returned may be of any type that is a Swift `Error`.
-public protocol HttpResponseErrorBinding {
+public typealias HTTPResponseErrorBinding = (HttpResponse) async throws -> Error
 
-    /// The interface for creating the response object that results from a HTTP/HTTPS error response.
-    ///
-    /// Value returned may be of any type that is a Swift `Error`.
-    static func makeError(httpResponse: HttpResponse, decoder: ResponseDecoder?) async throws -> Error
+extension HTTPBindings {
+
+    static func makeError<E, Reader>(readingClosure: @escaping ReadingClosure<E, Reader>, documentReadingClosure: @escaping DocumentReadingClosure<E, Reader>) async throws -> E? {
+        return { response in
+            return try documentReadingClosure(try await response.body.readData() ?? Data(), readingClosure)
+            
+        }
+    }
 }

@@ -10,6 +10,8 @@ import software.amazon.smithy.model.knowledge.HttpBinding
 import software.amazon.smithy.model.shapes.OperationShape
 import software.amazon.smithy.model.traits.TimestampFormatTrait
 import software.amazon.smithy.swift.codegen.ClientRuntimeTypes
+import software.amazon.smithy.swift.codegen.SmithyReadWriteTypes
+import software.amazon.smithy.swift.codegen.SmithyXMLTypes
 import software.amazon.smithy.swift.codegen.SwiftDependency
 import software.amazon.smithy.swift.codegen.integration.HttpBindingResolver
 import software.amazon.smithy.swift.codegen.integration.ProtocolGenerator
@@ -42,13 +44,16 @@ class HttpResponseBindingOutputGenerator(
             .build()
 
         ctx.delegator.useShapeWriter(httpBindingSymbol) { writer ->
-            writer.addImport(SwiftDependency.CLIENT_RUNTIME.target)
-            writer.openBlock("extension $outputShapeName: \$N {", "}", ClientRuntimeTypes.Http.HttpResponseBinding) {
+            writer.addImport(SwiftDependency.SMITHY_XML.target)
+            writer.addImport(SwiftDependency.SMITHY_READ_WRITE.target)
+            writer.openBlock("extension \$L {", "}", outputShapeName) {
                 writer.openBlock(
-                    "public init(httpResponse: \$N, decoder: \$D) async throws {",
+                    "static func responseReadingClosure(httpResponse: \$N) async throws -> \$N<\$L, \$N> {",
                     "}",
                     ClientRuntimeTypes.Http.HttpResponse,
-                    ClientRuntimeTypes.Serde.ResponseDecoder
+                    SmithyReadWriteTypes.ReadingClosure,
+                    outputShapeName,
+                    SmithyXMLTypes.Reader
                 ) {
                     HttpResponseHeaders(ctx, false, headerBindings, defaultTimestampFormat, writer).render()
                     HttpResponsePrefixHeaders(ctx, responseBindings, writer).render()

@@ -55,7 +55,6 @@ import software.amazon.smithy.swift.codegen.integration.middlewares.RetryMiddlew
 import software.amazon.smithy.swift.codegen.integration.middlewares.providers.HttpHeaderProvider
 import software.amazon.smithy.swift.codegen.integration.middlewares.providers.HttpQueryItemProvider
 import software.amazon.smithy.swift.codegen.integration.middlewares.providers.HttpUrlPathProvider
-import software.amazon.smithy.swift.codegen.integration.serde.DynamicNodeDecodingGeneratorStrategy
 import software.amazon.smithy.swift.codegen.integration.serde.UnionDecodeGeneratorStrategy
 import software.amazon.smithy.swift.codegen.integration.serde.UnionEncodeGeneratorStrategy
 import software.amazon.smithy.swift.codegen.middleware.OperationMiddlewareGenerator
@@ -181,7 +180,6 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
             }
             if (shouldRenderDecodableBodyStructForInputShapes || httpBodyMembers.isNotEmpty()) {
                 renderBodyStructAndDecodableExtension(ctx, shape, mapOf())
-                DynamicNodeDecodingGeneratorStrategy(ctx, shape, isForBodyStruct = true).renderIfNeeded()
             }
         }
     }
@@ -194,18 +192,16 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
         val outputShapesWithMetadata = resolveOutputShapes(ctx)
             .filter { !it.key.hasEventStreamMember(ctx.model) }
 
-        for ((shape, metadata) in outputShapesWithMetadata) {
-            if (shape.members().any { it.isInHttpBody() }) {
-                renderBodyStructAndDecodableExtension(ctx, shape, metadata)
-                DynamicNodeDecodingGeneratorStrategy(ctx, shape, isForBodyStruct = true).renderIfNeeded()
-            }
-        }
+//        for ((shape, metadata) in outputShapesWithMetadata) {
+//            if (shape.members().any { it.isInHttpBody() }) {
+//                renderBodyStructAndDecodableExtension(ctx, shape, metadata)
+//            }
+//        }
 
-        val errorShapes = resolveErrorShapes(ctx)
-        for (shape in errorShapes) {
-            renderBodyStructAndDecodableExtension(ctx, shape, mapOf())
-            DynamicNodeDecodingGeneratorStrategy(ctx, shape, isForBodyStruct = true).renderIfNeeded()
-        }
+//        val errorShapes = resolveErrorShapes(ctx)
+//        for (shape in errorShapes) {
+//            renderBodyStructAndDecodableExtension(ctx, shape, mapOf())
+//        }
     }
 
     override fun generateCodableConformanceForNestedTypes(ctx: ProtocolGenerator.GenerationContext) {
@@ -226,7 +222,8 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
             .build()
 
         ctx.delegator.useShapeWriter(encodeSymbol) { writer ->
-            writer.openBlock("extension \$N: \$N {", "}", symbol, codableProtocol) {
+            val extensionOrNot = codableProtocol?.let { writer.format(": \$N", it) } ?: ""
+            writer.openBlock("extension \$N\$L {", "}", symbol, extensionOrNot) {
                 writer.addImport(SwiftDependency.CLIENT_RUNTIME.target)
                 val members = shape.members().toList()
                 when (shape) {
@@ -238,7 +235,7 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
                         val path = "properties.".takeIf { shape.hasTrait<ErrorTrait>() } ?: ""
                         renderStructEncode(ctx, shape, mapOf(), httpBodyMembers, writer, defaultTimestampFormat, path)
                         writer.write("")
-                        renderStructDecode(ctx, mapOf(), httpBodyMembers, writer, defaultTimestampFormat, path)
+                        renderStructDecode(ctx, shape, mapOf(), httpBodyMembers, writer, defaultTimestampFormat, path)
                     }
                     is UnionShape -> {
                         // get all members of the union shape
@@ -249,7 +246,7 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
                         writer.write("")
                         UnionEncodeGeneratorStrategy(ctx, shape, members, writer, defaultTimestampFormat).render()
                         writer.write("")
-                        UnionDecodeGeneratorStrategy(ctx, members, writer, defaultTimestampFormat).render()
+                        UnionDecodeGeneratorStrategy(ctx, shape, members, writer, defaultTimestampFormat).render()
                     }
                 }
             }
@@ -275,11 +272,12 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
                 }
             }
             writer.write("")
-            writer.openBlock("extension ${decodeSymbol.name}: \$N {", "}", decodableProtocol) {
+            val extensionOrNot = decodableProtocol?.let { writer.format(": \$N", it) } ?: ""
+            writer.openBlock("extension ${decodeSymbol.name}\$L {", "}", extensionOrNot) {
                 writer.addImport(SwiftDependency.CLIENT_RUNTIME.target)
                 generateCodingKeysForMembers(ctx, writer, httpBodyMembers)
                 writer.write("")
-                renderStructDecode(ctx, metadata, httpBodyMembers, writer, defaultTimestampFormat, "")
+                renderStructDecode(ctx, shape, metadata, httpBodyMembers, writer, defaultTimestampFormat, "")
             }
         }
     }
@@ -473,9 +471,9 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
 
     override val operationMiddleware = OperationMiddlewareGenerator()
 
-    open val codableProtocol = SwiftTypes.Protocols.Codable
+    open val codableProtocol: Symbol? = SwiftTypes.Protocols.Codable
     open val encodableProtocol: Symbol? = SwiftTypes.Protocols.Encodable
-    open val decodableProtocol = SwiftTypes.Protocols.Decodable
+    open val decodableProtocol: Symbol? = SwiftTypes.Protocols.Decodable
 
     protected abstract val defaultTimestampFormat: TimestampFormatTrait.Format
     protected abstract val codingKeysGenerator: CodingKeysGenerator
@@ -495,6 +493,7 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
     )
     protected abstract fun renderStructDecode(
         ctx: ProtocolGenerator.GenerationContext,
+        shapeContainingMembers: Shape,
         shapeMetaData: Map<ShapeMetadata, Any>,
         members: List<MemberShape>,
         writer: SwiftWriter,

@@ -16,9 +16,9 @@ public enum XMLReadWrite {
         }
     }
 
-    public static func documentReadingClosure<T>() -> DocumentReadingClosure<T, Reader> {
+    public static func documentReadingClosure<T>(rootNodeInfo: NodeInfo) -> DocumentReadingClosure<T, Reader> {
         return { data, readingClosure in
-            try DocumentReader.read(data, readingClosure: readingClosure)
+            try DocumentReader.read(data, rootNodeInfo: rootNodeInfo, readingClosure: readingClosure)
         }
     }
 }

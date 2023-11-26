@@ -7,7 +7,7 @@
 
 import ClientRuntime
 
-public struct MockOutput: HttpResponseBinding {
+public struct MockOutput {
     public let value: Int
     public let headers: Headers
     public init(httpResponse: ClientRuntime.HttpResponse, decoder: ClientRuntime.ResponseDecoder?) throws {

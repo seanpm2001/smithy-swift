@@ -20,6 +20,18 @@ public class JSONWriter {
     }
 }
 
+public class JSONReader {
+    private let decoder: any ResponseDecoder
+
+    init(decoder: any ResponseDecoder) {
+        self.decoder = decoder
+    }
+
+    func decode<T: Decodable>(_ data: Data) throws -> T {
+        try decoder.decode(responseBody: data)
+    }
+}
+
 public enum JSONReadWrite {
 
     public static func documentWritingClosure<T: Encodable>(
@@ -29,6 +41,15 @@ public enum JSONReadWrite {
             let jsonEncoder = JSONWriter(encoder: encoder)
             try writingClosure(value, jsonEncoder)
             return jsonEncoder.data
+        }
+    }
+
+    public static func documentReadingClosure<T: Decodable>(
+        decoder: ResponseDecoder
+    ) -> DocumentReadingClosure<T, JSONReader> {
+        return { data, readingClosure in
+            let jsonDecoder = JSONReader(decoder: decoder)
+            return try readingClosure(jsonDecoder)
         }
     }
 

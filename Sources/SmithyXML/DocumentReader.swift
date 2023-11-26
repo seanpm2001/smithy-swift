@@ -10,7 +10,7 @@ import typealias SmithyReadWrite.ReadingClosure
 
 public enum DocumentReader {
 
-    static func read<T>(_ data: Data, readingClosure: ReadingClosure<T, Reader>) throws -> T {
-        return try readingClosure(Reader())
+    static func read<T>(_ data: Data, rootNodeInfo: NodeInfo, readingClosure: ReadingClosure<T, Reader>) throws -> T {
+        return try readingClosure(Reader(rootNodeInfo: rootNodeInfo))
     }
 }
