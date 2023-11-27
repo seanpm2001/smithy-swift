@@ -70,7 +70,7 @@ public class Reader {
         return false
     }
 
-    public func write() throws -> Data? {
+    public func read() throws -> Data? {
         // TODO: implement me
         return Data()
     }

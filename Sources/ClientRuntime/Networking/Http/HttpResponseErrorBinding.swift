@@ -15,10 +15,9 @@ public typealias HTTPResponseErrorBinding = (HttpResponse) async throws -> Error
 
 extension HTTPBindings {
 
-    static func makeError<E, Reader>(readingClosure: @escaping ReadingClosure<E, Reader>, documentReadingClosure: @escaping DocumentReadingClosure<E, Reader>) async throws -> E? {
+    static func makeError<E, Reader>(readingClosure: @escaping ReadingClosure<E, Reader>, documentReadingClosure: @escaping DocumentReadingClosure<E, Reader>) async throws -> HTTPResponseErrorBinding {
         return { response in
             return try documentReadingClosure(try await response.body.readData() ?? Data(), readingClosure)
-            
         }
     }
 }

@@ -192,16 +192,16 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
         val outputShapesWithMetadata = resolveOutputShapes(ctx)
             .filter { !it.key.hasEventStreamMember(ctx.model) }
 
-//        for ((shape, metadata) in outputShapesWithMetadata) {
-//            if (shape.members().any { it.isInHttpBody() }) {
-//                renderBodyStructAndDecodableExtension(ctx, shape, metadata)
-//            }
-//        }
+        for ((shape, metadata) in outputShapesWithMetadata) {
+            if (shape.members().any { it.isInHttpBody() }) {
+                renderBodyStructAndDecodableExtension(ctx, shape, metadata)
+            }
+        }
 
-//        val errorShapes = resolveErrorShapes(ctx)
-//        for (shape in errorShapes) {
-//            renderBodyStructAndDecodableExtension(ctx, shape, mapOf())
-//        }
+        val errorShapes = resolveErrorShapes(ctx)
+        for (shape in errorShapes) {
+            renderBodyStructAndDecodableExtension(ctx, shape, mapOf())
+        }
     }
 
     override fun generateCodableConformanceForNestedTypes(ctx: ProtocolGenerator.GenerationContext) {
@@ -256,7 +256,6 @@ abstract class HttpBindingProtocolGenerator : ProtocolGenerator {
     private fun renderBodyStructAndDecodableExtension(ctx: ProtocolGenerator.GenerationContext, shape: Shape, metadata: Map<ShapeMetadata, Any>) {
         val bodySymbol: Symbol = ctx.symbolProvider.toSymbol(shape).bodySymbol()
         val rootNamespace = ctx.settings.moduleName
-        val isEventStream = shape.hasEventStreamMember(ctx.model)
         val httpBodyMembers = shape.members().filter { it.isInHttpBody() }.toList()
 
         val decodeSymbol = Symbol.builder()
