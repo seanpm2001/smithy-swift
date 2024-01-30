@@ -53,7 +53,7 @@ class GreetingWithErrorsComplexErrorTest: HttpResponseTestBase {
                     ),
                     topLevel: "Top level"
                 )
-                XCTAssertEqual(actual.httpResponse.statusCode, HttpStatusCode(rawValue: 403))
+                XCTAssertEqual(await actual.httpResponse.statusCode, HttpStatusCode(rawValue: 403))
                 XCTAssertEqual(expected.properties.header, actual.properties.header)
                 XCTAssertEqual(expected.properties.topLevel, actual.properties.topLevel)
                 XCTAssertEqual(expected.properties.nested, actual.properties.nested)
@@ -115,7 +115,7 @@ class GreetingWithErrorsComplexErrorTest: HttpResponseTestBase {
                     ),
                     topLevel: "Top level"
                 )
-                XCTAssertEqual(actual.httpResponse.statusCode, HttpStatusCode(rawValue: 403))
+                XCTAssertEqual(await actual.httpResponse.statusCode, HttpStatusCode(rawValue: 403))
                 XCTAssertEqual(expected.properties.header, actual.properties.header)
                 XCTAssertEqual(expected.properties.topLevel, actual.properties.topLevel)
                 XCTAssertEqual(expected.properties.nested, actual.properties.nested)
