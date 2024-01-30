@@ -4,7 +4,7 @@
  */
 import AwsCommonRuntimeKit
 
-public class HttpResponse: HttpUrlResponse {
+public actor HttpResponse: HttpUrlResponse {
 
     public var headers: Headers
     public var body: ByteStream
@@ -23,7 +23,7 @@ public class HttpResponse: HttpUrlResponse {
     }
 }
 
-extension HttpResponse: CustomDebugStringConvertible {
+extension HttpResponse {
     public var debugDescriptionWithBody: String {
         return debugDescription + "\nResponseBody: \(body.debugDescription)"
     }

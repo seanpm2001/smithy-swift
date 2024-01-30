@@ -9,7 +9,6 @@ import Glibc
 #else
 import Darwin
 #endif
-import Foundation
 
 public class CRTClientEngine: HTTPClient {
     actor SerialExecutor {
@@ -143,7 +142,6 @@ public class CRTClientEngine: HTTPClient {
 
     private let windowSize: Int
     private let maxConnectionsPerEndpoint: Int
-    private let serialQueue: DispatchQueue = DispatchQueue(label: "read-write-status-code")
 
     init(config: CRTClientEngineConfig = CRTClientEngineConfig()) {
         self.maxConnectionsPerEndpoint = config.maxConnectionsPerEndpoint
@@ -266,11 +264,11 @@ public class CRTClientEngine: HTTPClient {
 
         var requestOptions = HTTPRequestOptions(request: request) { statusCode, headers in
             self.logger.debug("Interim response received")
-            self.safelySetStatusCode(response, makeStatusCode(statusCode))
+            response.statusCode = makeStatusCode(statusCode)
             response.headers.addAll(headers: Headers(httpHeaders: headers))
         } onResponse: { statusCode, headers in
             self.logger.debug("Main headers received")
-            self.safelySetStatusCode(response, makeStatusCode(statusCode))
+            response.statusCode = makeStatusCode(statusCode)
             response.headers.addAll(headers: Headers(httpHeaders: headers))
 
             // resume the continuation as soon as we have all the initial headers
@@ -291,7 +289,7 @@ public class CRTClientEngine: HTTPClient {
             self.logger.debug("Request/response completed")
             switch result {
             case .success(let statusCode):
-                self.safelySetStatusCode(response, makeStatusCode(statusCode))
+                response.statusCode = makeStatusCode(statusCode)
             case .failure(let error):
                 self.logger.error("Response encountered an error: \(error)")
             }
@@ -305,12 +303,5 @@ public class CRTClientEngine: HTTPClient {
 
         response.body = .stream(stream)
         return requestOptions
-    }
-
-    // Helper method used to set status code without data race
-    private func safelySetStatusCode(_ response: HttpResponse, _ statusCode: HttpStatusCode) {
-        serialQueue.async {
-            response.statusCode = statusCode
-        }
     }
 }
