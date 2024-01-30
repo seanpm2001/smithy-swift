@@ -27,7 +27,7 @@ public struct DeserializeMiddleware<OperationStackOutput>: Middleware {
 
             let response = try await next.handle(context: context, input: input) // call handler to get http response
             var copiedResponse = response
-            if (200..<300).contains(response.httpResponse.statusCode.rawValue) {
+            if (200..<300).contains(await response.httpResponse.statusCode.rawValue) {
                 let output = try await httpResponseClosure(copiedResponse.httpResponse)
                 copiedResponse.output = output
                 return copiedResponse
@@ -37,7 +37,7 @@ public struct DeserializeMiddleware<OperationStackOutput>: Middleware {
                 // eg. [RestJSONError](https://github.com/awslabs/aws-sdk-swift/blob/d1d18eefb7457ed27d416b372573a1f815004eb1/Sources/Core/AWSClientRuntime/Protocols/RestJSON/RestJSONError.swift#L38,
                 // and then the service error eg. [AccountNotFoundException](https://github.com/awslabs/aws-sdk-swift/blob/d1d18eefb7457ed27d416b372573a1f815004eb1/Sources/Services/AWSCloudTrail/models/Models.swift#L62)
                 let bodyData = try await copiedResponse.httpResponse.body.readData()
-                copiedResponse.httpResponse.body = .data(bodyData)
+                await copiedResponse.httpResponse.setBody(newBody: .data(bodyData))
                 throw try await httpResponseErrorClosure(copiedResponse.httpResponse)
           }
     }
