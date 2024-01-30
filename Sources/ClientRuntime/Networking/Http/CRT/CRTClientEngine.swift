@@ -143,6 +143,7 @@ public class CRTClientEngine: HTTPClient {
 
     private let windowSize: Int
     private let maxConnectionsPerEndpoint: Int
+    private let serialQueue: DispatchQueue = DispatchQueue(label: "read-write-status-code")
 
     init(config: CRTClientEngineConfig = CRTClientEngineConfig()) {
         self.maxConnectionsPerEndpoint = config.maxConnectionsPerEndpoint
@@ -308,7 +309,6 @@ public class CRTClientEngine: HTTPClient {
 
     // Helper method used to set status code without data race
     private func safelySetStatusCode(_ response: HttpResponse, _ statusCode: HttpStatusCode) {
-        let serialQueue = DispatchQueue(label: "set-status-code-without-data-race")
         serialQueue.async {
             response.statusCode = statusCode
         }
