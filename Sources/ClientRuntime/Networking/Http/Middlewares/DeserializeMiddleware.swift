@@ -27,6 +27,10 @@ public struct DeserializeMiddleware<OperationStackOutput>: Middleware {
 
             let response = try await next.handle(context: context, input: input) // call handler to get http response
             var copiedResponse = response
+            while (100..<200).contains(await response.httpResponse.statusCode.rawValue) {
+                // Wait until http response status code gets set to either success or error
+                try await Task.sleep(nanoseconds: 10)
+            }
             if (200..<300).contains(await response.httpResponse.statusCode.rawValue) {
                 let output = try await httpResponseClosure(copiedResponse.httpResponse)
                 copiedResponse.output = output
