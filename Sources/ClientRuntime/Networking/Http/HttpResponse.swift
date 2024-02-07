@@ -31,7 +31,7 @@ public actor HttpResponse: HttpUrlResponse {
         guard self.statusCode.rawValue < 200 else {
             return
         }
-        return await withCheckedContinuation{ continuation in
+        return await withCheckedContinuation { continuation in
             self.continuation = continuation
         }
     }
