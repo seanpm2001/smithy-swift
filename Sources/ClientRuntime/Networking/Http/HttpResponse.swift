@@ -9,6 +9,7 @@ public actor HttpResponse: HttpUrlResponse {
     public var headers: Headers
     public var body: ByteStream
     public var statusCode: HttpStatusCode
+    private var continuation: CheckedContinuation<Void, Never>?
 
     public func addHeaders(additionalHeaders: Headers) {
         self.headers.addAll(headers: additionalHeaders)
@@ -19,7 +20,20 @@ public actor HttpResponse: HttpUrlResponse {
     }
 
     public func setStatusCode(newStatusCode: HttpStatusCode) {
+        let codeBeforeUpdate = self.statusCode.rawValue
         self.statusCode = newStatusCode
+        if newStatusCode.rawValue >= 200 && codeBeforeUpdate < 200 {
+            self.continuation?.resume()
+        }
+    }
+
+    public func waitForFinalStatusCode() async {
+        guard self.statusCode.rawValue < 200 else {
+            return
+        }
+        return await withCheckedContinuation{ continuation in
+            self.continuation = continuation
+        }
     }
 
     public init(headers: Headers = .init(), statusCode: HttpStatusCode = .processing, body: ByteStream = .noStream) {
