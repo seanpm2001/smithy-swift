@@ -20,6 +20,7 @@ public actor HttpResponse: HttpUrlResponse {
     }
 
     public func setStatusCode(newStatusCode: HttpStatusCode) {
+        if self.statusCode.rawValue >= 200 { return }
         let codeBeforeUpdate = self.statusCode.rawValue
         self.statusCode = newStatusCode
         if newStatusCode.rawValue >= 200 && codeBeforeUpdate < 200 {
@@ -33,6 +34,9 @@ public actor HttpResponse: HttpUrlResponse {
     }
 
     public func getFinalStatusCode() async -> Int {
+        guard self.statusCode.rawValue < 200 else {
+            return self.statusCode.rawValue
+        }
         // Wait until status code gets finalized.
         await withCheckedContinuation { continuation in
             self.continuation = continuation
