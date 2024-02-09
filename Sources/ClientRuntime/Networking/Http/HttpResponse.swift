@@ -23,17 +23,21 @@ public actor HttpResponse: HttpUrlResponse {
         let codeBeforeUpdate = self.statusCode.rawValue
         self.statusCode = newStatusCode
         if newStatusCode.rawValue >= 200 && codeBeforeUpdate < 200 {
+            // Resume when status code changes to a final value from informational code [100, 200).
+            // The resume happens exactly once for all code path of this continuation.
+            // Any non-HTTP error
             self.continuation?.resume()
         }
     }
 
-    public func waitForFinalStatusCode() async {
-        guard self.statusCode.rawValue < 200 else {
-            return
-        }
-        return await withCheckedContinuation { continuation in
+    public func getFinalStatusCode() async -> Int {
+        // Wait until status code gets finalized.
+        await withCheckedContinuation { continuation in
             self.continuation = continuation
         }
+        // Nullify continuation to safe-guard against resuming continuation > 1 times.
+        self.continuation = nil
+        return self.statusCode.rawValue
     }
 
     public init(headers: Headers = .init(), statusCode: HttpStatusCode = .processing, body: ByteStream = .noStream) {

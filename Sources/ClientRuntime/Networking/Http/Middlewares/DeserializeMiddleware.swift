@@ -29,9 +29,9 @@ public struct DeserializeMiddleware<OperationStackOutput>: Middleware {
             var copiedResponse = response
 
             // Wait for status code of http response to be finalized; i.e., not [100, 200).
-            await response.httpResponse.waitForFinalStatusCode()
+            let code = await response.httpResponse.getFinalStatusCode()
 
-            if (200..<300).contains(await response.httpResponse.statusCode.rawValue) {
+            if (200..<300).contains(code) {
                 let output = try await httpResponseClosure(copiedResponse.httpResponse)
                 copiedResponse.output = output
                 return copiedResponse
