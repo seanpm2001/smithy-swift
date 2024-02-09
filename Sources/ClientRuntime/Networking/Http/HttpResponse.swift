@@ -27,6 +27,8 @@ public actor HttpResponse: HttpUrlResponse {
             // The resume happens exactly once for all code path of this continuation.
             // Any non-HTTP error
             self.continuation?.resume()
+            // Nullify continuation to safe-guard against resuming continuation > 1 times.
+            self.continuation = nil
         }
     }
 
@@ -35,8 +37,6 @@ public actor HttpResponse: HttpUrlResponse {
         await withCheckedContinuation { continuation in
             self.continuation = continuation
         }
-        // Nullify continuation to safe-guard against resuming continuation > 1 times.
-        self.continuation = nil
         return self.statusCode.rawValue
     }
 
