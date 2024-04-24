@@ -189,7 +189,7 @@ extension SdkHttpRequestBuilder {
     }
 }
 
-public class SdkHttpRequestBuilder: RequestMessageBuilder {
+public final class SdkHttpRequestBuilder: RequestMessageBuilder {
 
     required public init() {}
 

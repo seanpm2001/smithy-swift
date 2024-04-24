@@ -26,6 +26,13 @@ public struct Interceptors<
         self.interceptors.append(interceptor.erase())
     }
 
+    /// - Parameter interceptor: The Interceptor to add.
+    public mutating func add(
+        _ interceptor: some Interceptor<InputType, OutputType, RequestType, ResponseType, AttributesType>
+    ) {
+        self.interceptors.append(interceptor.erase())
+    }
+
     /// - Parameter interceptorFn: The closure to use as the Interceptor hook.
     public mutating func addReadBeforeExecution(
         _ interceptorFn: @escaping (any BeforeSerialization<InputType, AttributesType>) async throws -> Void

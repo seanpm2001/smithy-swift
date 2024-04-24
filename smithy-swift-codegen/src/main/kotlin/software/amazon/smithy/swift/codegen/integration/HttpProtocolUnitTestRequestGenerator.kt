@@ -105,7 +105,20 @@ open class HttpProtocolUnitTestRequestGenerator protected constructor(builder: B
             if (!ctx.settings.useInterceptors) {
                 writer.write("var $operationStack = OperationStack<$inputSymbol, $outputSymbol>(id: \"${test.id}\")")
             } else {
+                val serviceSymbol = ctx.symbolProvider.toSymbol(ctx.service)
+                writer.write("let config = try await \$L.builder().build().config", serviceSymbol.name)
                 writer.write("let builder = OrchestratorBuilder<$inputSymbol, $outputSymbol, SdkHttpRequest, HttpResponse, HttpContext>()")
+                writer.write("config.interceptorProviders.forEach { builder.interceptors.add($$0.create()) }")
+                writer.write(
+                    """
+                    config.httpInterceptorProviders.forEach {
+                        let i: any HttpInterceptor<${'$'}N, ${'$'}N> = $$0.create()
+                        builder.interceptors.add(i)
+                    }
+                    """.trimIndent(),
+                    inputSymbol,
+                    outputSymbol,
+                )
             }
 
             operationMiddleware.renderMiddleware(ctx, writer, operation, operationStack, MiddlewareStep.INITIALIZESTEP)

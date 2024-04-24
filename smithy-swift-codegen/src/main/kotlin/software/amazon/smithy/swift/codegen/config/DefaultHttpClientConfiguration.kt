@@ -10,6 +10,9 @@ import software.amazon.smithy.swift.codegen.ClientRuntimeTypes
 import software.amazon.smithy.swift.codegen.SwiftDependency
 import software.amazon.smithy.swift.codegen.config.ClientConfiguration.Companion.runtimeSymbol
 import software.amazon.smithy.swift.codegen.integration.ProtocolGenerator
+import software.amazon.smithy.swift.codegen.lang.AccessModifier
+import software.amazon.smithy.swift.codegen.lang.Function
+import software.amazon.smithy.swift.codegen.lang.FunctionParameter
 import software.amazon.smithy.swift.codegen.model.toOptional
 
 class DefaultHttpClientConfiguration : ClientConfiguration {
@@ -34,6 +37,22 @@ class DefaultHttpClientConfiguration : ClientConfiguration {
             "authSchemeResolver",
             ClientRuntimeTypes.Auth.AuthSchemeResolver,
             "ClientConfigurationDefaults.defaultAuthSchemeResolver"
+        ),
+        ConfigProperty(
+            "httpInterceptorProviders",
+            ClientRuntimeTypes.Interceptor.HttpProviders,
+            "[]",
+            accessModifier = AccessModifier.PublicPrivateSet
+        ),
+    )
+
+    override fun getMethods(ctx: ProtocolGenerator.GenerationContext): Set<Function> = setOf(
+        Function(
+            name = "addInterceptorProvider",
+            renderBody = { writer -> writer.write("self.httpInterceptorProviders.append(provider)") },
+            parameters = listOf(
+                FunctionParameter.NoLabel("provider", ClientRuntimeTypes.Interceptor.HttpProvider)
+            ),
         )
     )
 }

@@ -65,8 +65,9 @@ class InterceptorTests: XCTestCase {
         }
     }
 
-    struct ModifyMultipleInterceptor<OutputType>: HttpInterceptor {
+    struct ModifyMultipleInterceptor: HttpInterceptor {
         public typealias InputType = TestInput
+        public typealias OutputType = TestOutput
 
         private let newInputValue: Int
 
@@ -95,7 +96,7 @@ class InterceptorTests: XCTestCase {
         let addAttributeInterceptor = AddAttributeInterceptor<String, TestInput, TestOutput, SdkHttpRequest, HttpResponse, HttpContext>(key: AttributeKey(name: "foo"), value: "bar")
         let modifyInputInterceptor = ModifyInputInterceptor<TestInput, TestOutput, SdkHttpRequest, HttpResponse, HttpContext>(keyPath: \.property, value: "bar")
         let addHeaderInterceptor = AddHeaderInterceptor<TestInput, TestOutput>(headerName: "foo", headerValue: "bar")
-        let modifyMultipleInterceptor = ModifyMultipleInterceptor<TestOutput>(newInputValue: 1)
+        let modifyMultipleInterceptor = ModifyMultipleInterceptor(newInputValue: 1)
 
         let interceptors: [AnyInterceptor<TestInput, TestOutput, SdkHttpRequest, HttpResponse, HttpContext>] = [
             addAttributeInterceptor.erase(),
@@ -117,5 +118,38 @@ class InterceptorTests: XCTestCase {
         XCTAssertEqual(interceptorContext.getAttributes().get(key: AttributeKey(name: "foo")), "bar")
         XCTAssertEqual(interceptorContext.getRequest().headers.value(for: "foo"), "bar")
         XCTAssertEqual(interceptorContext.getRequest().headers.value(for: "otherProperty"), "1")
+    }
+
+    struct ModifyHostInterceptor<InputType, OutputType, RequestType: RequestMessage, ResponseType: ResponseMessage, AttributesType: HasAttributes>: Interceptor {
+        func modifyBeforeRetryLoop(context: some MutableRequest<Self.InputType, Self.RequestType, Self.AttributesType>) async throws {
+            context.updateRequest(updated: context.getRequest().toBuilder().withHost("foo").build())
+        }
+    }
+
+    struct ModifyHostInterceptorProvider: InterceptorProvider {
+        func create<InputType, OutputType, RequestType: RequestMessage, ResponseType: ResponseMessage, AttributesType: HasAttributes>() -> any Interceptor<InputType, OutputType, RequestType, ResponseType, AttributesType> {
+            ModifyHostInterceptor()
+        }
+    }
+
+    func test_providers() async throws {
+        let provider1 = ModifyHostInterceptorProvider()
+        var interceptors = Interceptors<TestInput, TestOutput, SdkHttpRequest, HttpResponse, HttpContext>()
+
+        interceptors.add(provider1.create())
+
+        let httpContext = HttpContext(attributes: Attributes())
+        let input = TestInput()
+
+        let context = DefaultInterceptorContext<TestInput, TestOutput, SdkHttpRequest, HttpResponse, HttpContext>(input: input, attributes: httpContext)
+        context.updateRequest(updated: SdkHttpRequestBuilder().build())
+
+        try await interceptors.modifyBeforeSerialization(context: context)
+        try await interceptors.modifyBeforeRetryLoop(context: context)
+        try await interceptors.modifyBeforeTransmit(context: context)
+
+        let resultRequest = try XCTUnwrap(context.getRequest())
+
+        XCTAssertEqual(resultRequest.host, "foo")
     }
 }

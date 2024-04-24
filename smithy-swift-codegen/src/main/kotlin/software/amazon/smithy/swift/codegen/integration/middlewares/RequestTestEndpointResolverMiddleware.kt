@@ -29,7 +29,7 @@ class RequestTestEndpointResolverMiddleware(private val model: Model, private va
                         .withHost("\(attributes.getHostPrefix() ?? "")\(attributes.getHost() ?? "")")
                         .build()
                 })
-                """.trimMargin()
+                """.trimIndent()
             )
         } else {
             writer.openBlock(

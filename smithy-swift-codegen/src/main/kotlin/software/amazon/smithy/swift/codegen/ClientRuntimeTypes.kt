@@ -76,6 +76,18 @@ object ClientRuntimeTypes {
         val AuthSchemeResolverParams = runtimeSymbol("AuthSchemeResolverParameters")
     }
 
+    object Interceptor {
+        val Provider = runtimeSymbol("InterceptorProvider")
+        val Providers = runtimeSymbolWithoutNamespace("[ClientRuntime.InterceptorProvider]")
+        val HttpProvider = runtimeSymbolWithoutNamespace("ClientRuntime.HttpInterceptorProvider")
+        val HttpProviders = runtimeSymbolWithoutNamespace("[ClientRuntime.HttpInterceptorProvider]")
+    }
+
+    object Operation {
+        val Orchestrator = runtimeSymbol("Orchestrator")
+        val OrchestratorBuilder = runtimeSymbol("OrchestratorBuilder")
+    }
+
     object Core {
         val Endpoint = runtimeSymbol("Endpoint")
         val Date = runtimeSymbol("Date")

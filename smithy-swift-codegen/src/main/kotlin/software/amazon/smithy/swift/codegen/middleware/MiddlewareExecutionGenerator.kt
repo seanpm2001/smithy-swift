@@ -53,12 +53,25 @@ class MiddlewareExecutionGenerator(
             )
         } else {
             writer.write(
-                "let builder = OrchestratorBuilder<\$N, \$N, \$N, \$N, \$N>()",
+                "let builder = \$N<\$N, \$N, \$N, \$N, \$N>()",
+                ClientRuntimeTypes.Operation.OrchestratorBuilder,
                 inputShape,
                 outputShape,
                 ClientRuntimeTypes.Http.SdkHttpRequest,
                 ClientRuntimeTypes.Http.HttpResponse,
-                ClientRuntimeTypes.Http.HttpContext
+                ClientRuntimeTypes.Http.HttpContext,
+            )
+            writer.write("config.interceptorProviders.forEach { builder.interceptors.add($$0.create()) }")
+            // Swift can't infer the generic arguments to `create` for some reason
+            writer.write(
+                """
+                config.httpInterceptorProviders.forEach {
+                    let i: any HttpInterceptor<${'$'}N, ${'$'}N> = $$0.create()
+                    builder.interceptors.add(i)
+                }
+                """.trimIndent(),
+                inputShape,
+                outputShape,
             )
         }
 
