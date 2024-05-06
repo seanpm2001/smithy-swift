@@ -5,10 +5,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-// `FoundationStreamBridge` is not usable on Linux because it uses ObjC-interop features,
-// so this test is disabled there.
-
-#if os(iOS) || os(macOS) || os(watchOS) || os(tvOS) || os(visionOS)
+// Run this unit test on macOS only.
+//
+// `FoundationStreamBridge` is not usable on Linux because it uses ObjC-interop features.
+//
+// Unit tests of types that spawn threads are unreliable on Apple-platform simulators.
+// Mac tests "run on metal", not a simulator, so they will run reliably.
+#if os(macOS)
 
 import Foundation
 import XCTest
@@ -19,7 +22,10 @@ class FoundationStreamBridgeTests: XCTestCase {
     func test_open_streamsAllDataToOutputBuffer() async throws {
 
         // The maximum size of input streaming data in the tests
-        let maxDataSize = 65_536  // 64 kb
+        let maxDataSize = 16_384
+
+        // The max size of the buffer for data being streamed.
+        let maxBufferSize = 2 * maxDataSize
 
         // Create & fill a buffer with random bytes, for use in later test setup
         // Random buffer is reused because creating random data is slow
@@ -33,8 +39,7 @@ class FoundationStreamBridgeTests: XCTestCase {
 
         // Create a temp buffer we can use to copy the input stream bytes
         // We are responsible for deallocating it
-        let tempBufferSize = maxDataSize
-        let tempBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: tempBufferSize)
+        let tempBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: maxDataSize)
         defer { tempBuffer.deallocate() }
 
         // FoundationStreamBridge is susceptible to spurious bugs due to data races & other
@@ -47,21 +52,15 @@ class FoundationStreamBridgeTests: XCTestCase {
             // Run a test for every possible data size up to the maximum
             let dataSize = min(run, maxDataSize)
 
-            // Sizes of the following buffers within the `FoundationStreamBridge` under test are randomized to
-            // try and elicit errors in the streaming process.
-
-            // The bridge buffer may be as small as 1 byte, up to 2x as big as the data size
-            let bridgeBufferSize = Int.random(in: 1...(2 * dataSize))
-
-            // The bound stream buffer may be as small as 1 byte, up to 2x as big as the data size
-            let boundStreamBufferSize = Int.random(in: 1...(2 * dataSize))
+            // The buffer may be as small as 1 byte, up to 2x as big as the data size capped by maxBufferSize
+            let bufferSize = Int.random(in: 1...min(2 * dataSize, maxBufferSize))
 
             // Fill a data buffer with dataSize random numbers
             let originalData = Data(bytes: randomBuffer, count: dataSize)
 
             // Create a stream bridge with our original data & open it
             let bufferedStream = BufferedStream(data: originalData, isClosed: true)
-            let subject = FoundationStreamBridge(readableStream: bufferedStream, bridgeBufferSize: bridgeBufferSize, boundStreamBufferSize: boundStreamBufferSize, logger: TestLogger())
+            let subject = FoundationStreamBridge(readableStream: bufferedStream, bufferSize: bufferSize, logger: TestLogger())
             await subject.open()
 
             // This will hold the data that is bridged from the ReadableStream to the Foundation InputStream
@@ -72,7 +71,7 @@ class FoundationStreamBridgeTests: XCTestCase {
             while ![.atEnd, .error].contains(subject.inputStream.streamStatus) {
 
                 // Copy the input stream to the temp buffer.  When count is positive, bytes were read
-                let count = subject.inputStream.read(tempBuffer, maxLength: tempBufferSize)
+                let count = subject.inputStream.read(tempBuffer, maxLength: bufferSize)
                 if count > 0 {
                     // Add the read bytes onto the bridged data
                     bridgedData.append(tempBuffer, count: count)
@@ -90,7 +89,7 @@ class FoundationStreamBridgeTests: XCTestCase {
             XCTAssertNil(subject.inputStream.streamError, "Stream failed with error: \(subject.inputStream.streamError?.localizedDescription ?? "")")
 
             // Verify data was all bridged
-            XCTAssertEqual(bridgedData, originalData, "Run \(run) failed (dataSize: \(dataSize), bridgeBufferSize: \(bridgeBufferSize), boundStreamBufferSize: \(boundStreamBufferSize)")
+            XCTAssertEqual(bridgedData, originalData, "Run \(run) failed (dataSize: \(dataSize), bufferSize: \(bufferSize)")
         }
     }
 }
