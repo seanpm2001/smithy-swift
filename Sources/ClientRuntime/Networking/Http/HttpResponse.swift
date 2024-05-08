@@ -13,17 +13,23 @@ public class HttpResponse: HttpUrlResponse, ResponseMessage {
     public var headers: Headers
     public var body: ByteStream
     public var statusCode: HttpStatusCode
+    public var reason: String?
 
-    public init(headers: Headers = .init(), statusCode: HttpStatusCode = .processing, body: ByteStream = .noStream) {
+    public init(headers: Headers = .init(),
+                statusCode: HttpStatusCode = .processing,
+                body: ByteStream = .noStream,
+                reason: String? = nil) {
         self.headers = headers
         self.statusCode = statusCode
         self.body = body
+        self.reason = reason
     }
 
     public init(headers: Headers = .init(), body: ByteStream, statusCode: HttpStatusCode) {
         self.body = body
         self.statusCode = statusCode
         self.headers = headers
+        self.reason = nil
     }
 }
 
