@@ -37,7 +37,7 @@ public final class FileStream: Stream {
     private let lock = NSRecursiveLock()
 
     /// Initializes a new `FileStream` instance.
-    init(fileHandle: FileHandle) {
+    public init(fileHandle: FileHandle) {
         self.fileHandle = fileHandle
         self.position = fileHandle.availableData.startIndex
     }

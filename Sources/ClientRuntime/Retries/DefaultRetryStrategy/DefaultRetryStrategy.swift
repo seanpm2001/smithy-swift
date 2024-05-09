@@ -56,7 +56,7 @@ public struct DefaultRetryStrategy: RetryStrategy {
     }
 }
 
-enum RetryError: Error {
+public enum RetryError: Error {
     case maxAttemptsReached
     case insufficientQuota
 }

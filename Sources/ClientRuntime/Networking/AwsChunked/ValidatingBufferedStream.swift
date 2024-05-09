@@ -6,8 +6,9 @@
 //
 
 import AwsCommonRuntimeKit
+import struct Foundation.Data
 
-class ValidatingBufferedStream {
+public class ValidatingBufferedStream: Stream {
     private var stream: BufferedStream
     private var checksumAlgorithm: ChecksumAlgorithm
     private var checksum: (any Checksum)
@@ -22,7 +23,7 @@ class ValidatingBufferedStream {
     }
 }
 
-extension ValidatingBufferedStream: Stream {
+public extension ValidatingBufferedStream  {
 
     var position: Data.Index {
         self.stream.position
