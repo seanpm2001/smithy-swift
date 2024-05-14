@@ -4,7 +4,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-import ClientRuntime
 
 public struct ServiceEndpointMetadata {
     public let defaultProtocol = ProtocolType.https.rawValue
@@ -53,7 +52,7 @@ extension ServiceEndpointMetadata {
 
         return SmithyEndpoint(endpoint: Endpoint(host: hostname,
                               path: "/",
-                              protocolType: ProtocolType(rawValue: transportProtocol)),
+                              protocolType: ProtocolType(rawValue: transportProtocol)!),
                               signingName: signingName)
     }
 
